@@ -26,6 +26,7 @@ $users = Get-AzureADUser | Sort-Object DisplayName | Select-Object -Property Dis
 $sharedmailbox = Get-Mailbox -RecipientTypeDetails SharedMailbox -ResultSize:Unlimited | Sort-Object DisplayName | Select-Object -Property Name,Alias,UserPrincipalName | Out-GridView -Title "Please select the mailbox you are adding the user(s) to" -OutputMode Single | Select-Object -ExpandProperty UserPrincipalName
 
 foreach ($user in $users) {
+    Remove-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -Confirm:$false
     Add-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -AutoMapping:$false
 }
-Write-Host "$users have been added to $sharedmailbox"
+Write-Host "$users have been removed and re-added to $sharedmailbox without automapping"
