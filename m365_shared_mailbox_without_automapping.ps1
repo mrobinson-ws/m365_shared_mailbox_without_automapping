@@ -22,5 +22,5 @@ Write-Verbose "Removing $user from $sharedmailbox (It will skip if not present),
 foreach ($user in $users) {
     Remove-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -Confirm:$false
     Add-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -AutoMapping:$false
+    Write-Verbose "$user has been added to $sharedmailbox without automapping"
 }
-Write-Verbose "$users have been removed and re-added to $sharedmailbox without automapping"
