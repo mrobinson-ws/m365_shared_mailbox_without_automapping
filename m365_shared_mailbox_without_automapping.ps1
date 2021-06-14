@@ -21,5 +21,6 @@ $sharedmailbox = $allUsers | Where-Object RecipientTypeDetails -eq SharedMailbox
 foreach ($user in $users) {
     Remove-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -Confirm:$false
     Add-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -AutoMapping:$false
+    Add-RecipientPermission $sharedmailbox -AccessRights SendAs -Trustee $user -Confirm:$false
 }
 Write-Verbose "$users have been removed and re-added to $sharedmailbox without automapping"
