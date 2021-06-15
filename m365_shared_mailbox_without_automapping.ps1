@@ -20,8 +20,18 @@ $sharedmailbox = $allUsers | Where-Object RecipientTypeDetails -eq SharedMailbox
 
 Write-Verbose "Removing $user from $sharedmailbox (It will skip if not present), granting access with automapping set to false"
 foreach ($user in $users) {
-    Remove-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -Confirm:$false
+    Try
+    {
+        Write-Verbose "Removing Permnission if it exists"
+        Remove-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -Confirm:$false -ErrorAction Throw | Out-Null
+    }
+    Catch
+    {
+        Write-Verbose "Permission Does Not Exist Currently"
+    }
+    Write-Verbose "Adding Full Access"
     Add-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -AutoMapping:$false
+    Write-Verbose "Adding Send As Permission"
     Add-RecipientPermission $sharedmailbox -AccessRights SendAs -Trustee $user -Confirm:$false
 }
-Write-Verbose "$users have been removed and re-added to $sharedmailbox without automapping"
+Write-Verbose "$users have been removed (if needed) and re-added to $sharedmailbox without automapping"
