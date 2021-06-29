@@ -18,9 +18,13 @@ $allusers = Get-Mailbox -ResultSize Unlimited
 $users = $allUsers | Where-Object RecipientTypeDetails -eq UserMailbox | Sort-Object DisplayName | Select-Object -Property DisplayName,UserPrincipalName | Out-Gridview -Passthru -Title "Please select the user(s) to Share The Mailbox with" | Select-Object -ExpandProperty UserPrincipalName
 $sharedmailbox = $allUsers | Where-Object RecipientTypeDetails -eq SharedMailbox | Sort-Object DisplayName | Select-Object -Property Name,Alias,UserPrincipalName | Out-GridView -Title "Please select the mailbox you are adding the user(s) to" -OutputMode Single | Select-Object -ExpandProperty UserPrincipalName
 
-Write-Verbose "Removing $user from $sharedmailbox (It will skip if not present), granting access with automapping set to false"
+Write-Verbose "Removing $user from $sharedmailbox"
 foreach ($user in $users) {
+    Write-Verbose "Removing Permnission if it exists, ignore errors in yellow saying The Appropriate Access Control Entry Is Already Present"
     Remove-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -Confirm:$false
+    Write-Verbose "Adding Full Access"
     Add-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -AutoMapping:$false
-    Write-Verbose "$user has been added to $sharedmailbox without automapping"
+    Write-Verbose "Adding Send As Permission"
+    Add-RecipientPermission $sharedmailbox -AccessRights SendAs -Trustee $user -Confirm:$false
 }
+Write-Verbose "$users have been removed (if needed) and re-added to $sharedmailbox without automapping"
