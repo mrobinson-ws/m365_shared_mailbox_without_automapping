@@ -16,15 +16,17 @@ catch {
 
 $allusers = Get-Mailbox -ResultSize Unlimited
 $users = $allUsers | Where-Object RecipientTypeDetails -eq UserMailbox | Sort-Object DisplayName | Select-Object -Property DisplayName,UserPrincipalName | Out-Gridview -Passthru -Title "Please select the user(s) to Share The Mailbox with" | Select-Object -ExpandProperty UserPrincipalName
-$sharedmailbox = $allUsers | Where-Object RecipientTypeDetails -eq SharedMailbox | Sort-Object DisplayName | Select-Object -Property Name,Alias,UserPrincipalName | Out-GridView -Title "Please select the mailbox you are adding the user(s) to" -OutputMode Single | Select-Object -ExpandProperty UserPrincipalName
+$sharedmailboxes = $allUsers | Where-Object RecipientTypeDetails -eq SharedMailbox | Sort-Object DisplayName | Select-Object -Property Name,Alias,UserPrincipalName | Out-GridView -Title "Please select the mailbox you are adding the user(s) to" -Passthru | Select-Object -ExpandProperty UserPrincipalName
 
 Write-Verbose "Removing $user from $sharedmailbox"
 foreach ($user in $users) {
-    Write-Verbose "Removing Permnission if it exists, ignore errors in yellow saying The Appropriate Access Control Entry Is Already Present"
-    Remove-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -Confirm:$false
-    Write-Verbose "Adding Full Access"
-    Add-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -AutoMapping:$false
-    Write-Verbose "Adding Send As Permission"
-    Add-RecipientPermission $sharedmailbox -AccessRights SendAs -Trustee $user -Confirm:$false
+    foreach($sharedmailbox in $sharedmailboxes){
+        Write-Verbose "Removing Permnission on $sharedmailbox for $user if it exists, ignore errors in yellow, please report errors in red"
+        Remove-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -Confirm:$false
+        Write-Verbose "Adding Full Access to $sharedmailbox for $user"
+        Add-MailboxPermission -Identity $sharedmailbox -User $user -AccessRights FullAccess -AutoMapping:$false
+        Write-Verbose "Adding Send As Permission to $sharedmailbox for $user"
+        Add-RecipientPermission $sharedmailbox -AccessRights SendAs -Trustee $user -Confirm:$false
+    }
 }
-Write-Verbose "$users have been removed (if needed) and re-added to $sharedmailbox without automapping"
+Write-Verbose "$users have been removed (if needed) and re-added to $sharedmailboxes without automapping"
